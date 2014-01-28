@@ -1,3 +1,11 @@
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 
 public class FileInfo {
 
@@ -10,6 +18,7 @@ public class FileInfo {
 		
 	}
 
+	/*
 	public boolean equals(FileInfo fi) {
 		
 		if(this.fileSize != fi.fileSize)
@@ -17,6 +26,32 @@ public class FileInfo {
 		
 		return false;
 
+	}*/
+
+	public void calculateMd5Hash() {
+
+		if(path.length() == 0)
+			return;
+
+		try (InputStream is = Files.newInputStream(Paths.get(path))) {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			DigestInputStream dis = new DigestInputStream(is, md);
+			while(dis.read() != -1);
+			md5Hash = new String(md.digest());
+		}
+		catch(IOException | NoSuchAlgorithmException e) {
+			;
+		}
+
+		return;
+	}
+	
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		
+		str.append(path);
+		
+		return str.toString();
 	}
 
 	

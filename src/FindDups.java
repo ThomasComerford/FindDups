@@ -46,32 +46,52 @@ public class FindDups {
 		// Get keys from hashtable
 		Set<Long> mapKeys = sizeTable.keySet();
 		List<Long> sizeList = new ArrayList<>();
-		
+
 		for(long l : mapKeys) {
 			sizeList.add(l);
 		}
 
-		// sort list
+		// sort list, and reverse order
 		Collections.sort(sizeList);
-
-		// Create sorted list of filesizes
-
-		while(!sizeList.isEmpty()) {
-			long currentSize = sizeList.remove(sizeList.size() - 1);
-			List<FileInfo> fis = sizeTable.get(currentSize);
-			//xxxx   sizeTable.get(currentSize);
-		}
-		// for each key, get all values
-			// for each FileInfo, get md5 hash
-				// print list of matching sets to report file
-		
-		
-		// search through data structure
-		// if filesize is matching, check md5 hash
+		Collections.reverse(sizeList);
 
 		try {
+
+			while(!sizeList.isEmpty()) {
+				long currentSize = sizeList.remove(0);
+				List<FileInfo> fis = sizeTable.get(currentSize);
+	
+				if(fis.size() > 1) {
+					for(FileInfo next : fis) {
+						next.calculateMd5Hash();
+					}
+					
+					while(!fis.isEmpty()) {
+						ArrayList<FileInfo> dupList = new ArrayList<>();
+						String searchHash = fis.get(0).getMd5Hash();
+						dupList.add(fis.remove(0));
+						for(FileInfo entry : fis) {
+							if(entry.getMd5Hash().equals(searchHash)) {
+								dupList.add(entry);
+							}
+						}
+
+						if(dupList.size() > 1) {
+							reportFileWriter.write("File size:" + currentSize + "\n");
+							for(FileInfo entry : dupList) {
+								reportFileWriter.write(entry.toString() + "\n");
+							}
+							reportFileWriter.write("\n");
+						}
+					}
+				}
+			}
+
+			reportFileWriter.write("Total files processed:" + fileCount);
+
 			reportFileWriter.flush();
 			reportFileWriter.close();
+
 		}
 		catch(IOException e) {
 			;
@@ -89,6 +109,7 @@ public class FindDups {
 				processFile(nextFile);
 			}
 			else if(nextFile.isFile()) {
+				fileCount++;
 				long fileSize = nextFile.length();
 				FileInfo nextFileInfo = new FileInfo();
 				nextFileInfo.setPath(nextFile.getAbsolutePath());
@@ -100,8 +121,9 @@ public class FindDups {
 					fiList.add(nextFileInfo);
 				}
 				else {
-					List<File> fiList = new ArrayList<>();
-					sizeTable.put(fiList);
+					List<FileInfo> fiList = new ArrayList<>();
+					fiList.add(nextFileInfo);
+					sizeTable.put(fileSize, fiList);
 				}
 
 			}
